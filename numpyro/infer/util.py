@@ -38,7 +38,6 @@ def log_density(model, model_args, model_kwargs, params):
     """
     (EXPERIMENTAL INTERFACE) Computes log of joint density for the model given
     latent values ``params``.
-
     :param model: Python callable containing NumPyro primitives.
     :param tuple model_args: args provided to the model.
     :param dict model_kwargs: kwargs provided to the model.
@@ -72,7 +71,6 @@ def transform_fn(transforms, params, invert=False):
     (EXPERIMENTAL INTERFACE) Callable that applies a transformation from the `transforms`
     dict to values in the `params` dict and returns the transformed values keyed on
     the same names.
-
     :param transforms: Dictionary of transforms keyed by names. Names in
         `transforms` and `params` should align.
     :param params: Dictionary of arrays keyed by names.
@@ -93,7 +91,6 @@ def constrain_fn(model, model_args, model_kwargs, params, return_deterministic=F
     If a prior is a transformed distribution, the corresponding base value lies in
     the support of base distribution. Otherwise, the base value lies in the support
     of the distribution.
-
     :param model: a callable containing NumPyro primitives.
     :param tuple model_args: args provided to the model.
     :param dict model_kwargs: kwargs provided to the model.
@@ -139,7 +136,6 @@ def potential_energy(model, model_args, model_kwargs, params, enum=False):
     of the corresponding priors in `model`. If a prior is a transformed distribution,
     the corresponding base value lies in the support of base distribution. Otherwise,
     the base value lies in the support of the distribution.
-
     :param model: a callable containing NumPyro primitives.
     :param tuple model_args: args provided to the model.
     :param dict model_kwargs: kwargs provided to the model.
@@ -176,7 +172,6 @@ def find_valid_initial_params(rng_key, model,
     `is_valid` flag to say whether the initial parameters are valid. Parameter values
     are considered valid if the values and the gradients for the log density have
     finite values.
-
     :param jax.random.PRNGKey rng_key: random number generator seed to
         sample from the prior. The returned `init_params` will have the
         batch shape ``rng_key.shape[:-1]``.
@@ -299,7 +294,6 @@ def get_potential_fn(model, inv_transforms, enum=False, replay_model=False,
     energy (negative log joint density). In addition, this returns a
     function to transform unconstrained values at sample sites to constrained
     values within their respective support.
-
     :param model: Python callable containing Pyro primitives.
     :param dict inv_transforms: dictionary of transforms keyed by names.
     :param bool enum: whether to enumerate over discrete latent sites.
@@ -366,7 +360,6 @@ def initialize_model(rng_key, model,
     (EXPERIMENTAL INTERFACE) Helper function that calls :func:`~numpyro.infer.util.get_potential_fn`
     and :func:`~numpyro.infer.util.find_valid_initial_params` under the hood
     to return a tuple of (`init_params_info`, `potential_fn`, `postprocess_fn`, `model_trace`).
-
     :param jax.random.PRNGKey rng_key: random number generator seed to
         sample from the prior. The returned `init_params` will have the
         batch shape ``rng_key.shape[:-1]``.
@@ -427,20 +420,20 @@ def initialize_model(rng_key, model,
 
     if not_jax_tracer(is_valid):
         if device_get(~jnp.all(is_valid)):
-		with numpyro.validation_enabled(), trace() as tr:
-                	# validate parameters
-	                substituted_model(*model_args, **model_kwargs)
-                	# validate values
-        	        for site in tr.values():
-                	    if site['type'] == 'sample':
-                        	with warnings.catch_warnings(record=True) as ws:
-                            		site['fn']._validate_sample(site['value'])
-                        	if len(ws) > 0:
-                            		for w in ws:
-                                	# at site information to the warning message
-                                		w.message.args = ("Site {}: {}".format(site["name"], w.message.args[0]),) \
-                                	    		+ w.message.args[1:]
-                                		warnings.showwarning(w.message, w.category, w.filename, w.lineno,
+            with numpyro.validation_enabled(), trace() as tr:
+                # validate parameters
+                substituted_model(*model_args, **model_kwargs)
+                # validate values
+                for site in tr.values():
+                    if site['type'] == 'sample':
+                        with warnings.catch_warnings(record=True) as ws:
+                            site['fn']._validate_sample(site['value'])
+                        if len(ws) > 0:
+                            for w in ws:
+                                # at site information to the warning message
+                                w.message.args = ("Site {}: {}".format(site["name"], w.message.args[0]),) \
+                                    + w.message.args[1:]
+                                warnings.showwarning(w.message, w.category, w.filename, w.lineno,
                                                      file=w.file, line=w.line)
             raise RuntimeError("Cannot find valid initial parameters. Please check your model again.")
     return ModelInfo(ParamInfo(init_params, pe, grad), potential_fn, postprocess_fn, model_trace)
@@ -475,11 +468,9 @@ class Predictive(object):
     """
     This class is used to construct predictive distribution. The predictive distribution is obtained
     by running model conditioned on latent samples from `posterior_samples`.
-
     .. warning::
         The interface for the `Predictive` class is experimental, and
         might change in the future.
-
     :param model: Python callable containing Pyro primitives.
     :param dict posterior_samples: dictionary of samples from the posterior.
     :param callable guide: optional guide to get posterior samples of sites not present
@@ -491,16 +482,12 @@ class Predictive(object):
     :param bool parallel: whether to predict in parallel using JAX vectorized map :func:`jax.vmap`.
         Defaults to False.
     :param batch_ndims: the number of batch dimensions in posterior samples. Some usages:
-
         + set `batch_ndims=0` to get prediction for 1 single sample
-
         + set `batch_ndims=1` to get prediction for `posterior_samples`
           with shapes `(num_samples x ...)`
-
         + set `batch_ndims=2` to get prediction for `posterior_samples`
           with shapes `(num_chains x N x ...)`. Note that if `num_samples`
           argument is not None, its value should be equal to `num_chains x N`.
-
     :return: dict of samples from the predictive distribution.
     """
 
@@ -551,7 +538,6 @@ class Predictive(object):
         Returns dict of samples from the predictive distribution. By default, only sample sites not
         contained in `posterior_samples` are returned. This can be modified by changing the
         `return_sites` keyword argument of this :class:`Predictive` instance.
-
         :param jax.random.PRNGKey rng_key: random key to draw samples.
         :param args: model arguments.
         :param kwargs: model kwargs.
@@ -574,20 +560,15 @@ def log_likelihood(model, posterior_samples, *args, parallel=False, batch_ndims=
     """
     (EXPERIMENTAL INTERFACE) Returns log likelihood at observation nodes of model,
     given samples of all latent variables.
-
     :param model: Python callable containing Pyro primitives.
     :param dict posterior_samples: dictionary of samples from the posterior.
     :param args: model arguments.
     :param batch_ndims: the number of batch dimensions in posterior samples. Some usages:
-
         + set `batch_ndims=0` to get prediction for 1 single sample
-
         + set `batch_ndims=1` to get prediction for `posterior_samples`
           with shapes `(num_samples x ...)`
-
         + set `batch_ndims=2` to get prediction for `posterior_samples`
           with shapes `(num_chains x N x ...)`
-
     :param kwargs: model kwargs.
     :return: dict of log likelihoods at observation sites.
     """
